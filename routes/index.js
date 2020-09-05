@@ -3,8 +3,10 @@ var router = express.Router();
 
 const path = require('path');
 const fs = require('fs');
-const fileUpload = require('express-fileupload');
 var download = require('download-file')
+
+var im = require('imagemagick');
+console.log("im ",im)
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -28,9 +30,13 @@ router.post('/upload', async (req, res) => {
         let _date = new Date(_timestamp);
         
         let uploadFolder = `/images/${_date.getMonth() + 1}`;
+        let srcFolder  = path.join(__dirname + "/../public/" , uploadFolder); 
+
+        let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
+        let destCopy  = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + "_large" + extension); 
         
         var options = {
-          directory: path.join(__dirname + "/../public/" , uploadFolder),
+          directory: srcFolder,
           filename: _timestamp + extension
         }
        
@@ -42,13 +48,27 @@ router.post('/upload', async (req, res) => {
               message: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
             });
           } else {
-            res.send({
-              status: true,
-              message: 'success',
-              data: {
-                name: path.join(uploadFolder,  _timestamp + extension)
+
+
+            im.convert([ srcCopy , '-resize', '400x300', destCopy ],  function(_err, stdout){
+              if (_err) {//throw err;
+                console.log('stdout:', stdout);
+                res.send({
+                  status: false,
+                  message:  'Error on convert ', _err
+                });
+              }
+              else {
+                res.send({
+                  status: true,
+                  message: 'success',
+                  data: {
+                    name: path.join(uploadFolder,  _timestamp + extension)
+                  }
+                });
               }
             });
+            
           }
         }) 
     }	
