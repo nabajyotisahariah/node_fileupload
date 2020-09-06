@@ -99,7 +99,9 @@ router.post('/upload', async (req, res) => {
         let _date = new Date(_timestamp);
         
         let uploadFolder = `/images/${_date.getMonth() + 1}`;
-
+		let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
+        let destCopy  = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + "_large" + extension); 
+		
         fs.mkdir( path.join(__dirname + "/../public/",  uploadFolder), { recursive: true }, (err) => { 
         
           image.mv( path.join(__dirname + "/../public/", uploadFolder, _timestamp + extension), (err) => {
@@ -110,14 +112,27 @@ router.post('/upload', async (req, res) => {
                 message: 'File is not uploaded',
               });
             }else {	
-              //send response
-              res.send({
-                status: true,
-                message: 'success',
-                data: {
-                  name: path.join(uploadFolder, _timestamp + extension)
-                }
-              });
+              //send response  
+			  
+			   im.convert([ srcCopy , '-resize', '400x300', destCopy ],  function(_err, stdout){
+				  if (_err) {//throw err;
+					console.log('stdout:', stdout);
+					res.send({
+					  status: false,
+					  message:  'Error on convert ', _err
+					});
+				  }
+				  else {
+					res.send({
+					  status: true,
+					  message: 'success',
+					  data: {
+						name: path.join(uploadFolder,  _timestamp + extension)
+					  }
+					});
+				  }
+				});
+		
             }
           });
           
