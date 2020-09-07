@@ -194,8 +194,6 @@ router.post('/uploadmulti', async (req, res) => {
   } else {
       let image = req.files.image;
       if(image.length > 1) {
-        console.log("Multiple File --- ",image);
-        let temp = []
         /*image.forEach(async (m) =>  {
           console.log("Multiple File m ",m);
           let uploadpath = await amazonS3.imageUploadByConvert(m)
@@ -203,33 +201,26 @@ router.post('/uploadmulti', async (req, res) => {
           temp.push ({name : uploadpath});
         });*/
 
-        const promises = image.map(async function (m) {
-          console.log("Multiple File m ",m);
-          let uploadpath = await amazonS3.imageUploadByConvert(m);
-          console.log("Multiple File uploadpath ",uploadpath);
-          temp.push ({
-                    status : uploadpath.status,
-                    name : uploadpath.data 
-            });
+        const promises = image.map(async (m) => {  
+          return await amazonS3.imageUploadByConvert(m);
         })
 
-        const results = await Promise.all(promises);
-        console.log("Multiple File promises ",promises, " results ",results);
-
-        if(temp.length > 0) {
+        /*await Promise.all(promises).then(t => {
           res.send({
             status: true,
             message: 'success',
-            path: temp
-          });
-        }
-        else {
-          res.send({
-            status: false,
-            message: 'fail',
-            path: []
-          });
-        }
+            path: t
+          });          
+        });*/
+
+        const response = await Promise.all(promises);
+        console.log("Promise.all ",response)
+        res.send({
+          status: true,
+          message: 'success',
+          path: response
+        });
+          
       } 
       else {
         console.log("Single File");
