@@ -1,5 +1,8 @@
 const fs = require('fs');
 const AWS = require('aws-sdk');
+const path = require('path');
+var im = require('imagemagick');
+var download = require('download-file')
 
 const amazonS3 = {
 	
@@ -49,8 +52,103 @@ const amazonS3 = {
 			console.log(`File uploaded successfully. ${data.Location}`);
 		});
 	},	
+
+	imageUploadByUrl : async function (image) {
+		
+		console.log("imageUploadByUrl ",image)
+		let promise = new Promise((resolve, reject) => {
+
+			const allowedExt = ['.jpg','.gif', '.jpeg'];
+			const extension = path.extname(image);	
+			let _timestamp = Date.now();
+			let _date = new Date(_timestamp);
+			
+			let uploadFolder = `/images/${_date.getMonth() + 1}`;
+			let srcFolder  = path.join(__dirname + "/../public/" , uploadFolder); 
+
+			let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
+			let destCopy  = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + "_large" + extension); 
+			
+			var options = {
+				directory: srcFolder,
+				filename: _timestamp + extension
+			}
+		
+			download(image, options, function(err){					
+			
+				if(err || allowedExt.indexOf(extension) == -1) {						
+					resolve ({
+					status: false,
+					message: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
+					});
+				} else {
+					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(_err, stdout){
+						
+						let t =await amazonS3.uploadS3();
+						console.log("Amazon S3 url upload ",t);			
+							
+						if (_err) {//throw err;
+							console.log('stdout:', stdout);
+							resolve ({
+								status: false,
+								message:  'Error on convert ', _err
+							});
+						}
+						else {
+							resolve ({
+								status: true,
+								data: path.join(uploadFolder,  _timestamp + extension)                  
+							});
+						}
+					});            
+				}
+			}) 
+		})	
+		return await promise; 
+	},
 	
-	
+	imageUploadByConvert : async function (image) {
+
+		let promise = new Promise((resolve, reject) => {
+
+			const allowedExt = ['.jpg','.gif', '.jpeg'];
+			const extension = path.extname(image.name);
+			let _timestamp = Date.now();
+			let _date = new Date(_timestamp);
+			
+			if(allowedExt.indexOf(extension) == -1) {
+				return false;
+			}
+			
+			let uploadFolder = `/images/${_date.getMonth() + 1}`;
+			let uploadFolderPath   = path.join(__dirname + "/../public/" , uploadFolder);
+			let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
+			let destCopy  = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + "_large" + extension); 	
+
+			if (!fs.existsSync(uploadFolderPath)) fs.mkdirSync(uploadFolderPath,'0777', true);
+
+			image.mv( path.join(uploadFolderPath, _timestamp + extension), (err) => {
+				//if (err) throw err;
+				if (err) {
+					return false;
+				}else {	 
+				
+					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
+					//im.convert([ srcCopy , '-resize', '400x300', destCopy ], function(err, stdout){
+						if (err) {
+							return false;
+						}
+						else {					  
+							let t =await amazonS3.uploadS3();
+							console.log("uploadFile_ trigger. t ",t)
+							resolve(path.join(uploadFolder,  _timestamp + extension));
+						}
+					})
+				}	
+			})	
+		})	
+		return await promise; 
+	},
 	
 	uploadFile_1 :  function()  {
 		console.log("Calling uploadFile_");
@@ -62,12 +160,9 @@ const amazonS3 = {
 		return promise;
 	},	
 	
-	uploadFile_ : async function()  {
-		console.log("Calling uploadFile_");
-
+	uploadS3 : async function()  {
 		let promise = new Promise((resolve, reject) => {
-				console.log("Calling uploadFile_ 11");
-			setTimeout(() => resolve("done!"), 1000)
+			setTimeout(() => resolve("Amazon S3 upload!"), 1000)
 		});
 		return await promise; 
 	}

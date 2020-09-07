@@ -30,7 +30,9 @@ router.get('/test', async(req, res)  => {
 router.post('/upload', async (req, res) => {
   try {
     const allowedExt = ['.jpg','.gif', '.jpeg'];
-    
+	
+    console.log("req.files ",req.files);
+	
     if(!req.files) {
 
       let image = req.body.image;
@@ -62,18 +64,18 @@ router.post('/upload', async (req, res) => {
           } else {
             im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(_err, stdout){
 				
-			   let t =await amazonS3.uploadFile_();
-			   console.log("Amazon S3 url upload ",t);			
+            let t =await amazonS3.uploadFile_();
+            console.log("Amazon S3 url upload ",t);			
 				
-              if (_err) {//throw err;
+            if (_err) {//throw err;
                 console.log('stdout:', stdout);
                 res.send({
                   status: false,
                   message:  'Error on convert ', _err
                 });
-              }
-              else {
-                res.send({
+            }
+            else {
+               res.send({
                   status: true,
                   message: 'success',
                   data: {
@@ -113,7 +115,7 @@ router.post('/upload', async (req, res) => {
         let _date = new Date(_timestamp);
         
         let uploadFolder = `/images/${_date.getMonth() + 1}`;
-		let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
+		    let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
         let destCopy  = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + "_large" + extension); 
 		
         fs.mkdir( path.join(__dirname + "/../public/",  uploadFolder), { recursive: true }, (err) => { 
@@ -125,39 +127,112 @@ router.post('/upload', async (req, res) => {
                 status: false,
                 message: 'File is not uploaded',
               });
-            }else {	
-              //send response  
+            }else {	 
 			  
-			   im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(_err, stdout){
-				  if (_err) {//throw err;
-					console.log('stdout:', stdout);
-					res.send({
-					  status: false,
-					  message:  'Error on convert ', _err
-					});
-				  }
-				  else {
-					  
-					let t =await amazonS3.uploadFile_();
-					console.log("Amazon S3 file upload ",t);			
-				
-					res.send({
-					  status: true,
-					  message: 'success',
-					  data: {
-						name: path.join(uploadFolder,  _timestamp + extension)
-					  }
-					});
-				  }
-				});
+              im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
+                if (err) {//throw err;
+                  console.log('stdout:', stdout);
+                  res.send({
+                    status: false,
+                    message:  'Error on convert ', err
+                  });
+                }
+                else {					  
+                  let t =await amazonS3.uploadFile_();
+                  console.log("Amazon S3 file upload ",t);			
+                
+                  res.send({
+                    status: true,
+                    message: 'success',
+                    data: {
+                    name: path.join(uploadFolder,  _timestamp + extension)
+                    }
+                  });
+                }
+              });
 		
             }
-          });
-          
+          });          
         }); 
-        
-        
       }		
+    }
+  } catch (err) {
+  console.log("Error ",err.message);
+      res.status(500).send(err);
+  }
+});
+
+
+router.post('/uploadmulti', async (req, res) => {
+  try {
+    const allowedExt = ['.jpg','.gif', '.jpeg'];
+	
+    console.log("req.files ",req.files);
+	
+    if(!req.files) {
+
+      let image = req.body.image;
+      if( image.indexOf('http:') > -1 || image.indexOf('https:') > -1 ) {
+
+        let json = await amazonS3.imageUploadByUrl(image);
+        console.log("json ",json)
+        res.send(json);
+      }	
+      else 	{		
+        res.send({
+          status: false,
+          message: "No a valid image"
+        });
+      } 	
+  } else {
+      let image = req.files.image;
+      if(image.length > 1) {
+        console.log("Multiple File --- ",image);
+        let temp = []
+        /*image.forEach(async (m) =>  {
+          console.log("Multiple File m ",m);
+          let uploadpath = await amazonS3.imageUploadByConvert(m)
+          console.log("Multiple File uploadpath ",uploadpath);
+          temp.push ({name : uploadpath});
+        });*/
+
+        const promises = image.map(async function (m) {
+          console.log("Multiple File m ",m);
+          let uploadpath = await amazonS3.imageUploadByConvert(m);
+          console.log("Multiple File uploadpath ",uploadpath);
+          temp.push ({name : uploadpath});
+        })
+
+        const results = await Promise.all(promises);
+        console.log("Multiple File promises ",promises, " results ",results);
+
+        if(temp.length > 0) {
+          res.send({
+            status: true,
+            message: 'success',
+            data: temp
+          });
+        }
+        else {
+          res.send({
+            status: false,
+            message: 'fail',
+            data: []
+          });
+        }
+      } 
+      else {
+        console.log("Single File");
+        const uploadpath = await amazonS3.imageUploadByConvert(image);        
+        console.log("Single File ",uploadpath);
+        res.send({
+          status: true,
+          message: 'success',
+          data: [{
+            name: uploadpath
+          }]
+        });
+      }
     }
   } catch (err) {
   console.log("Error ",err.message);
