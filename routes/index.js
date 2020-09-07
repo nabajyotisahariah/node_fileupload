@@ -6,11 +6,23 @@ const fs = require('fs');
 var download = require('download-file')
 
 var im = require('imagemagick');
-console.log("im ",im)
+
+const amazonS3  = require('./amazonUpload');
+console.log("amazonS3 ",amazonS3);
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
+});
+
+router.get('/test', async(req, res)  => {
+  let t = await amazonS3.uploadFile_1();
+  console.log("t11 ",t," d ");
+  
+  res.send({
+     status: false
+   });
 });
 
 
@@ -48,9 +60,11 @@ router.post('/upload', async (req, res) => {
               message: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
             });
           } else {
-
-
-            im.convert([ srcCopy , '-resize', '400x300', destCopy ],  function(_err, stdout){
+            im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(_err, stdout){
+				
+			   let t =await amazonS3.uploadFile_();
+			   console.log("Amazon S3 url upload ",t);			
+				
               if (_err) {//throw err;
                 console.log('stdout:', stdout);
                 res.send({
@@ -114,7 +128,7 @@ router.post('/upload', async (req, res) => {
             }else {	
               //send response  
 			  
-			   im.convert([ srcCopy , '-resize', '400x300', destCopy ],  function(_err, stdout){
+			   im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(_err, stdout){
 				  if (_err) {//throw err;
 					console.log('stdout:', stdout);
 					res.send({
@@ -123,6 +137,10 @@ router.post('/upload', async (req, res) => {
 					});
 				  }
 				  else {
+					  
+					let t =await amazonS3.uploadFile_();
+					console.log("Amazon S3 file upload ",t);			
+				
 					res.send({
 					  status: true,
 					  message: 'success',
@@ -146,7 +164,6 @@ router.post('/upload', async (req, res) => {
       res.status(500).send(err);
   }
 });
-
 
 
 module.exports = router;
