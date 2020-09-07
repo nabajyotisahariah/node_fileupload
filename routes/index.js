@@ -176,13 +176,20 @@ router.post('/uploadmulti', async (req, res) => {
 
         let json = await amazonS3.imageUploadByUrl(image);
         console.log("json ",json)
-        res.send(json);
+        
+        res.send({
+          status: true,
+          message: 'success',
+          path: json
+        });
       }	
       else 	{		
         res.send({
           status: false,
           message: "No a valid image"
         });
+
+        
       } 	
   } else {
       let image = req.files.image;
@@ -200,7 +207,10 @@ router.post('/uploadmulti', async (req, res) => {
           console.log("Multiple File m ",m);
           let uploadpath = await amazonS3.imageUploadByConvert(m);
           console.log("Multiple File uploadpath ",uploadpath);
-          temp.push ({name : uploadpath});
+          temp.push ({
+                    status : uploadpath.status,
+                    name : uploadpath.data 
+            });
         })
 
         const results = await Promise.all(promises);
@@ -210,14 +220,14 @@ router.post('/uploadmulti', async (req, res) => {
           res.send({
             status: true,
             message: 'success',
-            data: temp
+            path: temp
           });
         }
         else {
           res.send({
             status: false,
             message: 'fail',
-            data: []
+            path: []
           });
         }
       } 
@@ -228,7 +238,7 @@ router.post('/uploadmulti', async (req, res) => {
         res.send({
           status: true,
           message: 'success',
-          data: [{
+          path: [{
             name: uploadpath
           }]
         });

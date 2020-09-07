@@ -54,7 +54,7 @@ const amazonS3 = {
 	},	
 
 	imageUploadByUrl : async function (image) {
-		
+
 		console.log("imageUploadByUrl ",image)
 		let promise = new Promise((resolve, reject) => {
 
@@ -78,8 +78,8 @@ const amazonS3 = {
 			
 				if(err || allowedExt.indexOf(extension) == -1) {						
 					resolve ({
-					status: false,
-					message: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
+						status: false,
+						data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
 					});
 				} else {
 					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(_err, stdout){
@@ -91,7 +91,7 @@ const amazonS3 = {
 							console.log('stdout:', stdout);
 							resolve ({
 								status: false,
-								message:  'Error on convert ', _err
+								data:  'Error on convert ', _err
 							});
 						}
 						else {
@@ -117,7 +117,10 @@ const amazonS3 = {
 			let _date = new Date(_timestamp);
 			
 			if(allowedExt.indexOf(extension) == -1) {
-				return false;
+				resolve ({
+					status: false,
+					data:  'Only images with this extension are supported .jpg|.gif|.jpeg',
+				});
 			}
 			
 			let uploadFolder = `/images/${_date.getMonth() + 1}`;
@@ -130,18 +133,27 @@ const amazonS3 = {
 			image.mv( path.join(uploadFolderPath, _timestamp + extension), (err) => {
 				//if (err) throw err;
 				if (err) {
-					return false;
+					resolve ({
+						status: false,
+						data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
+					});
 				}else {	 
 				
 					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
 					//im.convert([ srcCopy , '-resize', '400x300', destCopy ], function(err, stdout){
 						if (err) {
-							return false;
+							resolve ({
+								status: false,
+								data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
+							});
 						}
 						else {					  
 							let t =await amazonS3.uploadS3();
 							console.log("uploadFile_ trigger. t ",t)
-							resolve(path.join(uploadFolder,  _timestamp + extension));
+							resolve ({
+								status: true,
+								data: path.join(uploadFolder,  _timestamp + extension)
+							});
 						}
 					})
 				}	
