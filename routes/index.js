@@ -27,6 +27,86 @@ router.get('/test', async(req, res)  => {
 
 
 //https://static.toiimg.com/thumb/msid-77925982,width-1070,height-580,imgsize-145451,resizemode-75,overlay-toi_sw,pt-32,y_pad-40/photo.jpg
+// https://www.callicoder.com/node-js-express-mongodb-restful-crud-api-tutorial/
+
+router.post('/uploadmulti', async (req, res) => {
+  try {
+    const allowedExt = ['.jpg','.gif', '.jpeg'];
+	
+    console.log("req.files ",req.files);
+	
+    if(!req.files) {
+
+      let image = req.body.image;
+      if( image.indexOf('http:') > -1 || image.indexOf('https:') > -1 ) {
+
+        let json = await amazonS3.imageUploadByUrl(image);
+        console.log("json ",json)
+        
+        res.send({
+          status: (json.status ? true : false),
+          message: 'success',
+          path: json
+        });
+      }	
+      else 	{		
+        res.send({
+          status: false,
+          message: "No a valid image"
+        });
+
+        
+      } 	
+  } else {
+      let image = req.files.image;
+      if(image.length > 1) {
+        /*image.forEach(async (m) =>  {
+          console.log("Multiple File m ",m);
+          let uploadpath = await amazonS3.imageUploadByConvert(m)
+          console.log("Multiple File uploadpath ",uploadpath);
+          temp.push ({name : uploadpath});
+        });*/
+
+        const promises = image.map(async (m) => {  
+          return await amazonS3.imageUploadByConvert(m);
+        })
+
+        /*await Promise.all(promises).then(t => {
+          res.send({
+            status: true,
+            message: 'success',
+            path: t
+          });          
+        });*/
+
+        const response = await Promise.all(promises);
+        console.log("Promise.all ",response)
+        res.send({
+          status: true,
+          message: 'success',
+          path: response
+        });
+          
+      } 
+      else {
+        console.log("Single File");
+        const uploadpath = await amazonS3.imageUploadByConvert(image);        
+        console.log("Single File ",uploadpath);
+        res.send({
+          status: true,
+          message: 'success',
+          path: [{
+            name: uploadpath
+          }]
+        });
+      }
+    }
+  } catch (err) {
+  console.log("Error ",err.message);
+      res.status(500).send(err);
+  }
+});
+
 router.post('/upload', async (req, res) => {
   try {
     const allowedExt = ['.jpg','.gif', '.jpeg'];
@@ -155,85 +235,6 @@ router.post('/upload', async (req, res) => {
           });          
         }); 
       }		
-    }
-  } catch (err) {
-  console.log("Error ",err.message);
-      res.status(500).send(err);
-  }
-});
-
-
-router.post('/uploadmulti', async (req, res) => {
-  try {
-    const allowedExt = ['.jpg','.gif', '.jpeg'];
-	
-    console.log("req.files ",req.files);
-	
-    if(!req.files) {
-
-      let image = req.body.image;
-      if( image.indexOf('http:') > -1 || image.indexOf('https:') > -1 ) {
-
-        let json = await amazonS3.imageUploadByUrl(image);
-        console.log("json ",json)
-        
-        res.send({
-          status: (json.status ? true : false),
-          message: 'success',
-          path: json
-        });
-      }	
-      else 	{		
-        res.send({
-          status: false,
-          message: "No a valid image"
-        });
-
-        
-      } 	
-  } else {
-      let image = req.files.image;
-      if(image.length > 1) {
-        /*image.forEach(async (m) =>  {
-          console.log("Multiple File m ",m);
-          let uploadpath = await amazonS3.imageUploadByConvert(m)
-          console.log("Multiple File uploadpath ",uploadpath);
-          temp.push ({name : uploadpath});
-        });*/
-
-        const promises = image.map(async (m) => {  
-          return await amazonS3.imageUploadByConvert(m);
-        })
-
-        /*await Promise.all(promises).then(t => {
-          res.send({
-            status: true,
-            message: 'success',
-            path: t
-          });          
-        });*/
-
-        const response = await Promise.all(promises);
-        console.log("Promise.all ",response)
-        res.send({
-          status: true,
-          message: 'success',
-          path: response
-        });
-          
-      } 
-      else {
-        console.log("Single File");
-        const uploadpath = await amazonS3.imageUploadByConvert(image);        
-        console.log("Single File ",uploadpath);
-        res.send({
-          status: true,
-          message: 'success',
-          path: [{
-            name: uploadpath
-          }]
-        });
-      }
     }
   } catch (err) {
   console.log("Error ",err.message);
