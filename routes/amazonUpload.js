@@ -107,9 +107,9 @@ const amazonS3 = {
 		return await promise; 
 	},
 	
-	imageUploadByConvert : async function (image) {
+	imageUploadByConvert : function (image) {
 
-		let promise = new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 
 			const allowedExt = ['.jpg','.gif', '.jpeg'];
 			const extension = path.extname(image.name);
@@ -117,7 +117,7 @@ const amazonS3 = {
 			let _date = new Date(_timestamp);
 			
 			if(allowedExt.indexOf(extension) == -1) {
-				resolve ({
+				return resolve ({
 					status: false,
 					data:  'Only images with this extension are supported .jpg|.gif|.jpeg',
 				});
@@ -133,7 +133,7 @@ const amazonS3 = {
 			image.mv( path.join(uploadFolderPath, _timestamp + extension), (err) => {
 				//if (err) throw err;
 				if (err) {
-					resolve ({
+					return resolve ({
 						status: false,
 						data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
 					});
@@ -142,7 +142,7 @@ const amazonS3 = {
 					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
 					//im.convert([ srcCopy , '-resize', '400x300', destCopy ], function(err, stdout){
 						if (err) {
-							resolve ({
+							return resolve ({
 								status: false,
 								data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
 							});
@@ -150,7 +150,7 @@ const amazonS3 = {
 						else {					  
 							let t =await amazonS3.uploadS3();
 							console.log("uploadFile_ trigger. t ",t)
-							resolve ({
+							return resolve ({
 								status: true,
 								data: path.join(uploadFolder,  _timestamp + extension)
 							});
@@ -159,7 +159,7 @@ const amazonS3 = {
 				}	
 			})	
 		})	
-		return await promise; 
+		//return await promise; 
 	},
 	
 	uploadFile_1 :  function()  {
