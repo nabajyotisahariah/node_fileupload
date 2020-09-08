@@ -53,10 +53,10 @@ const amazonS3 = {
 		});
 	},	
 
-	imageUploadByUrl : async function (image) {
+	imageUploadByUrl :  function (image) {
 
 		console.log("imageUploadByUrl ",image)
-		let promise = new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 
 			const allowedExt = ['.jpg','.gif', '.jpeg'];
 			const extension = path.extname(image);	
@@ -104,7 +104,6 @@ const amazonS3 = {
 				}
 			}) 
 		})	
-		return await promise; 
 	},
 	
 	imageUploadByConvert : function (image) {
@@ -133,7 +132,7 @@ const amazonS3 = {
 			image.mv( path.join(uploadFolderPath, _timestamp + extension), (err) => {
 				//if (err) throw err;
 				if (err) {
-					return resolve ({
+					 resolve ({
 						status: false,
 						data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
 					});
@@ -142,7 +141,7 @@ const amazonS3 = {
 					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
 					//im.convert([ srcCopy , '-resize', '400x300', destCopy ], function(err, stdout){
 						if (err) {
-							return resolve ({
+							 resolve ({
 								status: false,
 								data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
 							});
@@ -150,7 +149,7 @@ const amazonS3 = {
 						else {					  
 							let t =await amazonS3.uploadS3();
 							console.log("uploadFile_ trigger. t ",t)
-							return resolve ({
+							 resolve ({
 								status: true,
 								data: path.join(uploadFolder,  _timestamp + extension)
 							});

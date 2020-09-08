@@ -178,7 +178,7 @@ router.post('/uploadmulti', async (req, res) => {
         console.log("json ",json)
         
         res.send({
-          status: true,
+          status: (json.status ? true : false),
           message: 'success',
           path: json
         });
