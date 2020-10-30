@@ -65,7 +65,6 @@ const amazonS3 = {
 			
 			let uploadFolder = `/images/${_date.getMonth() + 1}`;
 			let srcFolder  = path.join(__dirname + "/../public/" , uploadFolder); 
-
 			let srcCopy   = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + extension); 
 			let destCopy  = path.join(__dirname + "/../public/" , uploadFolder, _timestamp + "_large" + extension); 
 			
@@ -138,7 +137,7 @@ const amazonS3 = {
 					});
 				}else {	 
 				
-					im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
+					/*im.convert([ srcCopy , '-resize', '400x300', destCopy ], async function(err, stdout){
 					//im.convert([ srcCopy , '-resize', '400x300', destCopy ], function(err, stdout){
 						if (err) {
 							 resolve ({
@@ -146,49 +145,20 @@ const amazonS3 = {
 								data: err ? 'image not found' : 'Only images with this extension are supported .jpg|.gif|.jpeg',
 							});
 						}
-						else {					  
-							let t =await amazonS3.uploadS3();
-							console.log("uploadFile_ trigger. t ",t)
+						else {*/					  
+							//let t =await amazonS3.uploadS3();
+							//console.log("uploadFile_ trigger. t ",t)
 							 resolve ({
 								status: true,
 								data: path.join(uploadFolder,  _timestamp + extension)
 							});
-						}
-					})
+						//}
+					//})
 				}	
 			})	
 		})	
 		//return await promise; 
-	},
-	
-	uploadFile_1 :  function()  {
-		console.log("Calling uploadFile_");
-
-		let promise = new Promise((resolve, reject) => {
-				console.log("Calling uploadFile_ 11");
-			setTimeout(() => resolve("done!"), 1000)
-		});
-		return promise;
-	},	
-	
-	uploadS3 : async function()  {
-		let promise = new Promise((resolve, reject) => {
-			setTimeout(() => resolve("Amazon S3 upload!"), 1000)
-		});
-		return await promise; 
 	}
-
-	/*
-	 const promise1 = Promise.resolve(3);
-        const promise2 = 42;
-        const promise3 = new Promise((resolve, reject) => {
-          setTimeout(resolve, 100, 'foo');
-        });
-
-        Promise.all([promise1, promise2, promise3]).then((values) => {
-          console.log(values);
-		});
-	*/	
 };
 
 module.exports = amazonS3;

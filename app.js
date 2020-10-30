@@ -9,7 +9,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 ////////////////////////
-const dbConfig = require('./config/database.config.js');
+const dbConfig = require('./app/config/database.config');
 /*const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
