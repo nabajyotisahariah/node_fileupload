@@ -12,6 +12,7 @@
     "cors": "^2.8.5",
     "debug": "~2.6.9",
     "download-file": "^0.1.5",
+    "elasticsearch": "^16.7.1",
     "express": "~4.16.1",
     "express-fileupload": "^1.2.0",
     "http-errors": "~1.6.3",

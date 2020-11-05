@@ -1,0 +1,220 @@
+GET blog/_search
+GET blog/_doc/pCJHfXUB0x4Ga30SOHLn
+GET blog/_search?q=PostBody:test11
+#Query DSL
+GET blog/_search
+{
+  "from": 0, 
+  "size": 20, 
+  "query": {
+     "match": {
+       "PostType": "Tutorial"
+     }
+  }
+}
+GET blog/_search
+{
+  "from": 0,
+  "size": 20,
+  "query": {
+    "query_string": {
+      "default_field": "PostName",
+      "query": "Integrating AND Elasticsearch OR Node"
+    }
+  },
+  "sort": [
+    {
+      "PostName.keyword": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+GET blog/_search
+{
+  "query": {
+    "match": {
+      "PostName": "nodejs Integrating "
+    }
+  }
+}
+GET blog/_search
+{
+  "query": {
+    "query_string": {
+      "fields": ["PostName","PostBody"],
+      "query": "Integrating Elasticsearch ",
+      "default_operator": "OR"
+    }
+  }
+}
+#DSL Term query Filter [Male, Female, Price]
+GET blog/_search
+{
+  "query": {
+    "term": {
+      "PostBody.keyword": {
+        "value": "test11"
+      }
+    }
+  }
+}
+
+GET blog/_search
+{
+  "query": {
+    "terms": {
+      "PostBody.keyword": [
+        "test11",
+        "This is"
+      ]
+    }
+  }
+}
+
+GET blog/_search
+{
+  "query": {
+    "range": {
+      "PostBody.keyword": {
+        "gte": 10,
+        "lte": 20
+      }
+    }
+  }
+}
+
+#Prefix Query
+GET blog/_search
+{
+  "query": {
+    "prefix": {
+      "PostName.keyword": {
+        "value": "Integrating Elas"
+      }
+    }
+  }
+}
+
+#boolean query
+GET blog/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "prefix": {
+            "PostName.keyword": {
+              "value": "Integrat"
+            }
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "PostBody": "test11"
+          }          
+        }
+      ],
+    "minimum_should_match": 1  
+      
+    }
+  }
+}
+
+DELETE /blog/_doc/BSI6fnUB0x4Ga30SCIrh
+
+POST /blog/_doc
+ {
+          "PostName" : "Integrating Elasticsearch Into Your Node.js Application11",
+          "PostType" : "Tutorial 11",
+          "PostBody" : "This is the text of our tutorial about using Elasticsearch in your Node.js application 11."
+        }
+
+
+POST /blog/_update/BSI6fnUB0x4Ga30SCIrh 
+{
+  "script" : {
+    "source": "ctx._source.PostBody=params.PostBody", 
+    "lang":"painless",
+    "params":{
+      "PostBody":"test"
+    }
+  }
+}
+
+POST /blog/_update_by_query
+{
+  "query": {
+    "match": {
+      "PostBody": "test"
+    }
+  },
+  "script" : {
+    "source": "ctx._source.PostBody=params.PostBody", 
+    "lang":"painless",
+    "params":{
+      "PostBody":"test11"
+    }
+  }
+}
+
+
+nGram , edgeNGram
+
+PUT /employee
+{
+  "settings":{
+     "analysis": {
+         "analyzer": {
+	         "my_analyzer":{
+		          "filter" : ["lowercase"],
+                "type":"custom",
+                 "tokenizer":"whitespace"		
+	         }
+	       }
+      }
+   },
+   "mappings: :{
+       "dynamic":"strict",
+        "properties" : {
+	          "empId": {
+		            "type":"integer"
+	          },
+            "empName":{
+                  "type":"text",
+                   "fields" : {
+                      "keyword" : {
+                        "type":"keyword"
+                      }
+		              }
+	           }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

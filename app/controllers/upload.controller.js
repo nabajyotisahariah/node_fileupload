@@ -210,7 +210,7 @@ exports.multiupload = async (req, res) => {
                 message: 'success',
                 path: [{
                     name: uploadpath
-                 }]
+              }]
             });
           }
         }

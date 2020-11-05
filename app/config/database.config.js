@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise;
 
-const url = 'mongodb://localhost:27017/test'
+const url = 'mongodb://localhost:27017/db'
 
 // Connecting to the database
 mongoose.connect( url,  {useNewUrlParser: true, useUnifiedTopology: true}).then(() => {

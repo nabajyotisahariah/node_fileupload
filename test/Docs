@@ -1,0 +1,733 @@
+Document Api
+    Single
+        Index Api
+        Get Api
+        Delete Api
+        Update 
+    Multiple
+        Multi Get Api
+        Bulk Ai
+        Delete by query Api
+        Update by query Api
+        Reindex Api
+--------------------
+
+
+
+POST /blog/_doc
+{
+    "PostName" : "Integrating Elasticsearch Into Your Node.js Application11",
+    "PostType" : "Tutorial 11",
+    "PostBody" : "This is the text of our tutorial about using Elasticsearch in your Node.js application 11."
+}
+
+GET blog/_search
+GET blog/_mapping
+
+------------------
+POST /blog/104/update
+{
+  "script" : {
+    "source": "ctx._source=params.val", 
+    "lang":"painless",
+    "params":{
+        "val" : {
+            "PostBody":"test11",
+            "PostType":"111"
+        }
+    }
+  }
+}
+
+----------------
+POST /blog/_update_by_query
+{
+  "query": {
+    "match": {
+      "PostBody": "test"
+    }
+  },
+  "script" : {
+    "source": "ctx._source=params.val", 
+    "lang":"painless",
+    "params":{
+        "val" : {
+            "PostBody":"test11",
+            "PostType":"111"
+        }
+    }
+  }
+}
+
+------------------------
+
+POST /blog/_update_by_query
+{
+  "query": {
+    "match": {
+      "PostBody": "test"
+    }
+  },
+  "script" : {
+    "source": "ctx._source.PostBody=params.PostBody", 
+    "lang":"painless",
+    "params":{
+      "PostBody":"test11"
+    }
+  }
+}
+
+--------------
+
+Multi Doc Api
+
+
+Search Api
+    Search URL
+        GET blog/_search
+
+    Request Body  Search
+        Query DSL
+	        ES provide a full query DSL (domain specific languague) based on JSON to define queries
+
+        GET blog/_search  - Request body Seach
+        {
+            "from": 0, 
+            "size": 20, 
+            "query": 
+            { - Query Element
+                "match": {   // Query DSL (Domain Specific language)
+                    "PostType": "Tutorial"
+                }
+            }
+        }
+
+       GET blog/_search
+        {
+            "from": 0,
+            "size": 20,
+            "query": {
+                "query_string":
+                {
+                    "default_field": "PostName",
+                    "query": "Integrating AND Elasticsearch OR Node"
+                 }
+            },
+            "sort": [
+            {
+                "PostName.keyword": {
+                    "order": "desc"
+                }
+            }]
+        } 
+
+--------------
+Query DSL
+    Full text query
+        match Query
+        Match pharse query
+        match pharse prefix query
+        Multi match query
+
+         match Query - Full test search
+            GET blog/_search
+            {
+                "from": 0, 
+                "size": 20, 
+                "query": {  
+                    "match": { 
+                        "PostType": "Tutorial"
+                    }
+                }
+            }
+
+            //match_phrase -- Single word
+            GET blog/_search
+            {
+                "from": 0, 
+                "size": 20, 
+                "query": {  
+                    "match_phrase": {  // match_pharse_prefix  // match_all
+                        "PostType": "Tutorial"
+                    }
+                }
+            }
+
+            //Query String Query
+
+            GET blog/_search
+            {
+                "query": {
+                    "query_string": {
+                        "fields": ["PostName","PostBody"],
+                        "query": "Integrating Elasticsearch ",
+                        "default_operator": "OR"
+                    }
+                }
+            }
+
+Term Level Query  - You have to give complete word or term. It uses in Filter like Male or Filter
+-----------------------
+    Term Query
+    Terms Query
+
+    #DSL Term query Filter [Male, Female, Price]
+    GET blog/_search
+    {
+        "query": {
+            "term": {
+                "PostBody.keyword": {
+                    "value": "test11"
+                }
+            }
+        }
+    }
+
+    GET blog/_search
+    {
+        "query": {
+            "terms": {
+                "PostBody.keyword": [
+                    "test11",
+                    "This is"
+                ]
+            }
+        }
+    }
+
+    Range query
+        GET blog/_search
+        {
+            "query": {
+                "range": {
+                    "PostBody.keyword": {
+                        "gte": 10,
+                        "lte": 20
+                    }
+                }
+            }
+        }
+
+    Prefix Query
+        GET blog/_search
+        {
+            "query": {
+                "prefix": {
+                    "PostName.keyword": {
+                        "value": "Integrating Elas"
+                    }
+                }
+            }
+        }
+
+    wildcard Query
+        GET blog/_search
+        {
+            "query": {
+                "wildcard": {
+                    "default_field":"abc",
+                    "query":"brown *",
+                    "default_operator:"OR"
+                }
+            }
+        }
+
+
+Compound Query
+    Bool Query
+        Must - Single 
+        Must-not
+        Should - Comparing
+        Filter
+        minimum_should_match
+
+        GET blog/_search
+        {
+            "query": {
+                "bool": {
+                "must": [ 
+                    {
+                        "prefix": { // We can use any DSL [match, prefix, term]
+                            "PostName.keyword": {
+                            "value": "Integrat"
+                            }
+                        }
+                    }
+                ],
+                "filter": {
+                    "range" :{
+                        "Age" :{
+                            "gte":10,
+                            "lte":100
+                        }
+                    }
+                }, 
+                "should": [
+                    {
+                        "term": {
+                            "genre": "male"
+                        }          
+                    },
+                    {
+                        "term": {
+                            "genre": "Female"
+                        }          
+                    }
+
+                ],
+                "minimum_should_match": 1  
+                
+                }
+            }
+        }
+
+Analysis in ElasticSearch
+----------------------------------
+    Converting text into Token or terms
+
+    Analysis is perform by
+        Analyzer -> Tokenizer -> Token Filter -> Character Filter
+
+    Where we use analysis
+        -> Query
+        -> Mapping parameters
+        -> Index Setting
+        
+    Tokenizer track order of the token
+
+    PUT /employee
+    {
+        "settings":{
+            "analysis": {
+                "analyzer": {
+                    "my_analyzer":{
+                    "type":"standard",
+                    "max_token_length":5,
+                    "stopwords":"_english_"		
+                }
+            }
+        }
+    }
+
+
+    PUT /employee
+    {
+    "settings":{
+        "analysis": {
+            "analyzer": {
+                "my_analyzer":{
+                    "filter" : ["lowercase"],
+                    "type":"custom",
+                    "tokenizer":"whitespace"		
+                }
+            }
+        }
+    },
+    "mappings: :{
+        "dynamic":"strict",
+            "properties" : {
+            "empId": {
+            "type":"integer"
+            },
+                "empName":{
+                    "type":"text",
+                    "fields" : {
+                "keyword" : {
+                    "type":"keyword"
+                }
+                }
+            },
+            "StateName": {
+                "type":"text",
+                        "fields" : {
+                    "keyword" : {
+                        "type":"keyword"
+                    }
+                    },
+                    "analyzer":"my_analyzer" | "simple" | "standard"
+                }
+            }
+        }
+    }
+
+    GET employee/_analyze
+    {
+        "analyzer":"standard",
+        "field":"comments",
+            "text" : "The Quick A Brown 12 Foxes jumped"
+    }
+
+    Different Types of Analyzer
+        -> Standard Analyzer (Default one)
+                -> max_token_length
+                -> Stopwords
+                -> stopwords_path
+    POST _analyze
+    {
+        "analyzer": "standard",
+        "text":"The Quick A Br@own  Foxe's jumped"
+    }
+    It will tokenize the special characters
+        "tokens" : [{"token" : "the","position" : 0}
+                    {"token" : "br","position" : 3},
+                    {"token" : "own","position" : 4}
+
+    Simple Analyzer -
+        POST _analyze
+        {
+            "analyzer": "simple",
+            "text":"The Quick A Br@own  Foxe's jumped"
+        }
+        Tokenizer where every we gets a space & special character
+        {
+            "tokens" : [{"token" : "the", "position" : 0},
+                        {"token" : "foxe","position" : 5},
+                        {"token" : "s","position" : 6}
+
+    whitespace analyzer - It include special character & not filter to lowercase
+        {
+            "tokens" : [{"token" : "The","position" : 0},
+                       {"token" : "Br@own","position" : 3},
+                       {"token" : "Foxe's","position" : 4}
+
+    keyword Analyzer : It takes everything as keyword
+        POST _analyze {
+            "analyzer": "keyword",
+            "text":"The Quick A Br@own  Foxe's jumped"
+        }
+        Response 
+        {
+            "tokens" : [{"token" : "The Quick A Br@own  Foxe's jumped", "position" : 0 }  ]
+        }
+
+    Pattern Analyzer [\W - Any non word character]
+        {"token" : "br",     "position" : 3 },
+        {"token" : "own",      "position" : 4}
+
+    custom Analyzer
+        PUT employee
+            {
+            "settings": {
+                "analysis": {
+                "analyzer": {
+                    "my_analyzer1":{
+                    "filter":["lowercase"],
+                    "type":"custom",
+                    "tokenizer":"whitespace"
+                    },
+                    "my_analyzer2":{
+                    "filter":["lowercase"],
+                    "type":"custom",
+                    "tokenizer":"standard"
+                    }
+                }
+                }
+            }
+
+        Mapping - It is a process of defining how a Document should be mappped to Search Engine, including 
+                searchable characteritics such as which filed is searchable & if any are tokenized.
+
+                The datatype for each field in a Document (string , number, Date, Object)
+
+                DELETE developer
+                    GET developer/_mapping
+                    PUT developer
+                    {
+                        "mappings": {
+                            "properties": {
+                                "name":{
+                                    "type": "text"
+                                },
+                                "skills":{
+                                    "type": "object",
+                                    "properties": {
+                                    "language":{
+                                        "type":"text"
+                                    },
+                                    "label":{
+                                        "type":"text"
+                                    }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    POST /developer/_doc
+                    {
+                        "name":"Mark",
+                        "skills":[
+                            {
+                                "language":"C",
+                                "label":"expert"
+                            }
+                        ]
+                    }
+
+
+                    GET /developer/_search
+                        {
+                        "query": {
+                            "bool": {
+                            "filter": [
+                                {
+                                "match" :{
+                                    "skills.language":"C"
+                                }
+                                },
+                                {
+                                "match" :{
+                                    "skills.label":"expert"
+                                }
+                                }
+                            ]
+                            }
+                        }
+                        }
+
+
+
+                            
+Tokenizer
+--------------
+    Word Tokenizer
+        Standard
+        lowercase
+        whitespace
+
+    Partial Wod Tokenizer
+        ngram Tokenizer quick [qum ui, ic, ck]
+        edge_ngram Tokenizer quick [q, qu, qui, quic, quick]
+
+    Strcutured Word Tokenizer
+        keyword
+        Pattern
+        Simple pattern 
+
+    ngram & edge_ngram tokenizer are not available in Analyzer
+
+    POST _analyze
+    {
+        "analyzer": "standard",
+        "text":"The Quick A Br@own  Foxe's jumped"
+    }
+
+    POST _analyze
+    {
+        "tokenizer": "standard",
+        "text":"The Quick A Br@own  Foxe's jumped"
+    }
+
+
+    GET ngram_example/_settings
+    PUT ngram_example
+    {
+    "settings": {
+        "analysis": {
+        "tokenizer": {
+            "my_tokenizer" : {
+            "type":"ngram",
+            "min_ngram":1,
+            "max_ngram":3,
+            "token_chars":[
+                "letter",
+                "digit"
+            ]
+            }
+        },
+        "analyzer": {
+            "my_analyzer" :{
+            "tokenizer":"my_tokenizer"
+            }
+        }
+        }
+    }
+    }
+
+    POST ngram_example/_analyze
+    {
+        "analyzer": "my_analyzer",
+        "text":"The Quick A Br@own  Foxe's jumped"
+    }
+
+    Response
+    {
+        "tokens" : [
+            {"token" : "T","position" : 0},
+            {"token" : "Th","position" : 1},
+            {"token" : "h", "position" : 2},
+            {"token" : "he", "position" : 3},
+
+
+    -----------------------------------
+
+    DELETE ngram_example
+    GET ngram_example/_settings
+    PUT ngram_example
+    {
+        "settings": {
+            "analysis": {
+                "tokenizer": {
+                    "my_tokenizer" : {
+                        "type":"edge_ngram",
+                        "min_gram":1,
+                        "max_gram":10,
+                        "token_chars":[
+                            "letter",
+                            "digit"
+                        ]
+                    }
+                },
+                "analyzer": {
+                    "my_analyzer" :{
+                        "tokenizer":"my_tokenizer"
+                    }
+                }
+            }
+        }
+    }
+
+    POST ngram_example/_analyze
+    {
+        "analyzer": "my_analyzer",
+        "text":"The Quick A Br@own  Foxe's jumped"
+    }
+
+    Response
+        {
+            "tokens" : [{"token" : "T",           "position" : 0},
+                        {"token" : "Q",      "position" : 3},
+                        {"token" : "Qu",      "position" : 4},
+                        {"token" : "Qui",      "position" : 5},
+                        {"token" : "Quic", "position" : 6},
+                        {"token" : "Quick", "position" :7}
+
+    Mapping addition
+        PUT ngram_example
+        {
+            "mappings": {
+                "properties": {
+                    "name":{
+                        "type": "text",
+                        "analyzer": "my_analyzer"
+                    },
+                    "skills":{
+                        "type": "object",
+                        "properties": {
+                        "language":{
+                            "type":"text"
+                        },
+                        "label":{
+                            "type":"text"
+                        }
+                        }
+                    }
+                }
+            }
+        }
+    ---------------------------------------------------------------------
+
+
+    DELETE ngram_example
+GET ngram_example/_settings
+PUT ngram_example
+{
+  "settings": {
+        "analysis": {
+            "tokenizer": {
+                "my_tokenizer" : {
+                    "type":"edge_ngram",
+                    "min_gram":2,
+                    "max_gram":10,
+                    "token_chars":[
+                        "letter",
+                        "digit"
+                    ]
+                }
+            },
+            "analyzer": {
+                "my_analyzer" :{
+                    "tokenizer":"my_tokenizer",
+                    "filter" : ["lowercase"]                
+                },
+                "my_analyzer1" :{
+                    "tokenizer":"whitespace",
+                    "filter" : ["lowercase"]                
+                }
+            }
+        }
+  },
+  "mappings": {
+        "properties": {
+            "title":{
+                "type": "text",
+                "analyzer": "my_analyzer"
+            },
+            "title1":{
+                "type": "text",
+                "analyzer": "my_analyzer1"
+            },
+            "language":{
+                "type": "text",
+                "analyzer": "keyword"
+            },
+            "genre":{
+                "type": "text",
+                "analyzer": "keyword"
+                
+            }
+        }
+    }
+}
+POST ngram_example/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text":"pink"
+}
+
+
+ POST /ngram_example/_doc
+{
+  "title":"Dil Bechara",
+  "title1":"Dil Bechara",
+  "language":"English",
+  "genre":"Comedy"
+    
+}
+                    
+                    
+GET ngram_example/_search
+{
+  "query": {
+    "match": {
+      "title": "dil" 
+    }
+  }
+}
+
+GET ngram_example/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "dil"
+          }
+        }
+      ],
+      "filter": [
+        {
+         "terms": {
+           "language": [
+             "Hindi"
+           ]
+         }
+        }
+      ]
+    }
+  }
+}
+
+

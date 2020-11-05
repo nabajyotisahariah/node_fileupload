@@ -1,0 +1,111 @@
+https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-edgengram-tokenizer.html
+
+DELETE ott_movies
+GET ott_movies/_settings
+PUT ott_movies
+{
+  "settings": {
+        "analysis": {
+            "tokenizer": {
+                "_autocomplete" : {
+                    "type":"edge_ngram",
+                    "min_gram":2,
+                    "max_gram":10,
+                    "token_chars":[
+                        "letter",
+                        "digit"
+                    ]
+                }
+            },
+            "analyzer": {
+                "autocomplete" :{
+                    "tokenizer":"_autocomplete",
+                    "filter" : ["lowercase"]                
+                },
+                "autocomplete_search" :{
+                    "tokenizer":"lowercase"                
+                }
+            }
+        }
+  },
+  "mappings": {
+        "properties": {
+            "title":{
+                "type": "text",
+                "analyzer": "autocomplete",
+                "search_analyzer": "autocomplete_search"
+            },
+            "language":{
+                "type": "text",
+                "analyzer": "keyword"
+            },
+            "genre":{
+                "type": "text",
+                "analyzer": "keyword"
+                
+            },
+            "img_url":{
+                "type": "text",
+                "analyzer": "keyword", 
+                "store": false
+            },
+            "release_year":{
+              "type": "integer" 
+            }
+        }
+    }
+}
+POST ott_movies/_analyze
+{
+  "analyzer": "autocomplete",
+  "text":"Pink"
+}
+
+
+ POST /ott_movies/_doc
+{
+  "title":"Dil Bechara",
+  "language":"Hindi",
+  "genre":"Comedy",
+  "img_url":"ABC",
+  "release_year":2000
+    
+}
+                
+GET ott_movies/_search
+                    
+GET ott_movies/_search
+{
+  "query": {
+    
+  }
+}
+
+GET ott_movies/_search
+{
+  "query": {
+    "match": {
+      "language": "Hindi" 
+    }
+  }
+}
+
+GET ott_movies/_search
+{
+  "size": 20, 
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "aa"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+
