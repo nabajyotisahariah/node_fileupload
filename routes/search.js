@@ -7,5 +7,7 @@ console.log("search ",search)
 // Retrieve a single Note with noteId
 router.get('/reco/:key', search.getSearch);
 
+router.get('/foryou', search.getForyou);
+
 
 module.exports = router;

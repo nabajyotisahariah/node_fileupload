@@ -41,6 +41,43 @@ exports.getSearch = async (req, res) => {
 
 };
 
+exports.getForyou = async (req, res) => {
+
+  console.log("exports.getForyou ",req.query.language)
+  
+  const result = await client.search({
+    index: 'ott_movies',
+    body: {      
+        "query": {
+          "bool": {            
+              "must": [
+                  { "match": { "language": req.query.language  ? req.query.language  : '' }},
+                  { "match": { "genre":  req.query.genre  ? req.query.genre  : '' }}
+              ]
+          }
+        },
+        "sort": [
+          {
+            "release_year": {
+              "order": "desc"
+            }
+          }
+        ]
+    }
+  })
+
+ 
+  var temp = [];
+  result.hits.hits.forEach( (res) => {
+    temp.push(res._source);
+  })
+  return res.send({
+  status:true,
+        data: temp
+    });
+
+};
+
 /*
 GET ott_movies/_search
 {
