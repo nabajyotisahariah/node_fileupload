@@ -44,16 +44,21 @@ exports.getSearch = async (req, res) => {
 exports.getForyou = async (req, res) => {
 
   console.log("exports.getForyou ",req.query.language)
-  
+  let _json = {};
+  if(req.query.language && req.query.genre) {
+    _json = [{ "match": { "language": req.query.language  ? req.query.language  : '' }},
+            { "match": { "genre":  req.query.genre  ? req.query.genre  : '' }}]
+
+  }
+  else if(req.query.language) {
+    _json = [{ "match": { "language": req.query.language  ? req.query.language  : '' }}]
+  }
   const result = await client.search({
     index: 'ott_movies',
     body: {      
         "query": {
           "bool": {            
-              "must": [
-                  { "match": { "language": req.query.language  ? req.query.language  : '' }},
-                  { "match": { "genre":  req.query.genre  ? req.query.genre  : '' }}
-              ]
+              "must": _json
           }
         },
         "sort": [
