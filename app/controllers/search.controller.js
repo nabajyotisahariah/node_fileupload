@@ -15,72 +15,85 @@ exports.getSearch = async (req, res) => {
       })*/
       
       //https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
-      const result = await client.search({
-        index: 'ott_movies',
-        body: {
-          query: {
-            multi_match: {
-              "query": req.params.key,
-               "fields": ["title", "title2^2", "language^3", "genre^2"]
+      try {
+        const result = await client.search({
+          index: 'ott_movies',
+          body: {
+            query: {
+              multi_match: {
+                "query": req.params.key,
+                 "fields": ["title", "title2^2", "language^3", "genre^2"]
+              }
             }
           }
-        }
-      })
-      //console.log("result ",result);
-      var temp = [];
-      result.hits.hits.forEach( (res) => {
-        temp.push(res._source);
-        //temp['_score'] = res._score;
-        //temp['_id'] = res._id;
-        //console.log("temp ",temp)
-      })
-      return res.send({
-			status:true,
-            data: temp
+        })
+        console.log("result ",result);
+        var temp = [];
+        result.hits.hits.forEach( (res) => {
+          temp.push(res._source);
+          //temp['_score'] = res._score;
+          //temp['_id'] = res._id;
+          //console.log("temp ",temp)
+        })
+        return res.send({
+        status:true,
+              data: temp
+          });
+  
+      }catch(e) {
+        console.log("Errr ",e.message)
+        return res.send({
+          status:false,
+                data: []
         });
-
+  
+      }
+      
 };
 
 exports.getForyou = async (req, res) => {
+  try {
+    console.log("exports.getForyou ",req.query.language)
+    let _json = {};
+    if(req.query.language && req.query.genre) {
+      _json = [{ "match": { "language": req.query.language  ? req.query.language  : '' }},
+              { "match": { "genre":  req.query.genre  ? req.query.genre  : '' }}]
 
-  console.log("exports.getForyou ",req.query.language)
-  let _json = {};
-  if(req.query.language && req.query.genre) {
-    _json = [{ "match": { "language": req.query.language  ? req.query.language  : '' }},
-            { "match": { "genre":  req.query.genre  ? req.query.genre  : '' }}]
-
-  }
-  else if(req.query.language) {
-    _json = [{ "match": { "language": req.query.language  ? req.query.language  : '' }}]
-  }
-  const result = await client.search({
-    index: 'ott_movies',
-    body: {      
-        "query": {
-          "bool": {            
-              "must": _json
-          }
-        },
-        "sort": [
-          {
-            "release_year": {
-              "order": "desc"
-            }
-          }
-        ]
     }
-  })
+    else if(req.query.language) {
+      _json = [{ "match": { "language": req.query.language  ? req.query.language  : '' }}]
+    }
+    const result = await client.search({
+      index: 'ott_movies',
+      body: {      
+          "query": {
+            "bool": {            
+                "must": _json
+            }
+          },
+          "sort": [
+            {
+              "release_year": {
+                "order": "desc"
+              }
+            }
+          ]
+      }
+    })
 
- 
-  var temp = [];
-  result.hits.hits.forEach( (res) => {
-    temp.push(res._source);
-  })
-  return res.send({
-  status:true,
-        data: temp
-    });
-
+  
+    var temp = [];
+    result.hits.hits.forEach( (res) => {
+      temp.push(res._source);
+    })
+    return res.send({
+    status:true,
+          data: temp
+      });
+  }catch(e) {
+      console.log("Errr ",e.message)
+      return res.send({status:false,data: []});  
+  }
 };
 
 /*
