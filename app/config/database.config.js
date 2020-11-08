@@ -2,10 +2,11 @@ const mongoose = require('mongoose');
 //const tunnel = require('tunnel-ssh');
 
 const movies = require('./../models/movie.model');
+const config = require("../../envConfig");
 
 mongoose.Promise = global.Promise;
 
-const url = 'mongodb://localhost:27017/db'
+const url = config.MONGO_URI;//'mongodb://localhost:27017/db'
 
 // Connecting to the database
 mongoose.connect( url,  {useNewUrlParser: true, useUnifiedTopology: true}).then(() => {

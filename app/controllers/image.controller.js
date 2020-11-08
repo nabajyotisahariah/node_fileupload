@@ -1,3 +1,4 @@
+const dbConfig = require('./../config/database.config');
 const Image = require('../models/image.model');
 
 /*

@@ -1,9 +1,11 @@
 var elasticsearch=require('elasticsearch');
+const config = require("../../envConfig");
 
 var client = new elasticsearch.Client( {  
   hosts: [
     //'https://[username]:[password]@[server]:[port]/',
-    'http://10.140.64.229:9200/'
+    //'http://10.140.64.229:9200/'
+    config.ELASTIC_URI
   ]
 });
 

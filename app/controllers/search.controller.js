@@ -1,7 +1,10 @@
 
 var client = require('./../config/elastic.config');
+const dbConfig = require('./../config/database.config');
 const SimailarMovies = require('../models/similarMovie.model');
+const config = require('./../../envConfig')
 
+console.log("config ",config," === ",config.PORT)
 
 exports.getSearch = async (req, res) => {
 
@@ -29,7 +32,7 @@ exports.getSearch = async (req, res) => {
             }
           }
         })
-        console.log("result ",result);
+        //console.log("result ",result);
         var temp = [];
         result.hits.hits.forEach( (res) => {
           temp.push(res._source);
@@ -105,13 +108,14 @@ exports.getForyouV1 = async (req, res) => {
     let uniqueArray = []
     let uniqueIdArray = []
     let result = {};
+    let genreArray = [];
       
 
     //SimailarMovies.find({_id:"5fa2a3fe2f074366b103c47a"})
-    SimailarMovies.find({ movie_id : {"$in": ["5f8c6492919835824fa87788","5f8c6492919835824fa87789" ]} })
+    SimailarMovies.find({ movie_id : {"$in": ["5f8c6492919835824fa877b3","5f8c6492919835824fa877a5" ]} })
     //SimailarMovies.find({ movie_id : {"$in": [ req.query.id ]} })
     .then(movie => {
-       console.log("Response ",movie)
+       //console.log("Response ",movie)
         if(!movie || movie.length ==0) {
 			    return res.send({
 				    status: true,
@@ -126,6 +130,10 @@ exports.getForyouV1 = async (req, res) => {
 
       movie.forEach( row => {
         //console.log("row ",row.similar_movies)
+        row.genre.split(",").forEach( genre => {
+          genreArray.push(genre);
+        })
+        
         row.similar_movies =eval(row.similar_movies[0]);
         //[{'movie_id': '5f8c6492919835824fa8782c', 'movie_title': 'What a Difference a Day Made: Doris Day Superstar', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2009', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa87831', 'movie_title': 'Twilight in Forks: The Saga of the Real Town', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2009', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa87832', 'movie_title': '400 Years of the Telescope', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2009', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa8783b', 'movie_title': 'Krautrock : The Rebirth of Germany', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2009', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa8783e', 'movie_title': 'Into the Mind', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2013', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa87841', 'movie_title': 'Hank: 5 Years from the Brink', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2013', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa87846', 'movie_title': 'Space: Unraveling the Cosmos', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2014', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa87847', 'movie_title': 'Graphic Sexual Horror', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2009', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa8784d', 'movie_title': 'Return to Homs', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2013', 'relevance_score': 22.172823}, {'movie_id': '5f8c6492919835824fa8784f', 'movie_title': 'Pierce the Veil: This Is a Wasteland', 'genre': 'Documentary', 'primary_language': 'English', 'release_year': '2013', 'relevance_score': 22.172823}];
         row.similar_movies.forEach( row1 => {
@@ -135,7 +143,15 @@ exports.getForyouV1 = async (req, res) => {
           }
         })
       })
-      result.similar_movies = uniqueArray;
+      //console.log("genreArray ",genreArray)
+      result.similarMovies = uniqueArray;
+      
+
+      var count = {};
+      genreArray.forEach(function(i) { count[i] = (count[i]||0) + 1;});
+      //console.log("count", count);
+
+      result.genreCount = count;
 
       res.send({status:true, data: result});
 

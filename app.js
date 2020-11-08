@@ -9,18 +9,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 ////////////////////////
-const dbConfig = require('./app/config/database.config');
-/*const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
+//const dbConfig = require('./app/config/database.config');
 
-// Connecting to the database
-/*mongoose.connect( "mongodb://localhost:27017", {useNewUrlParser: true, useUnifiedTopology: true}).then(() => {
-     console.log("Successfully connected to the database");    
-}).catch(err => {
-     console.log('Could not connect to the database. Exiting now...', err);
-     process.exit();
-});*/
-////////////////////////////
+require('./envConfig')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
