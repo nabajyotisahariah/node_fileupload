@@ -10,4 +10,4 @@ const MovieSchema = mongoose.Schema({
 	}
 );
 
-module.exports = mongoose.model('movies', MovieSchema);
+module.exports = mongoose.model('metareel_movies', MovieSchema);

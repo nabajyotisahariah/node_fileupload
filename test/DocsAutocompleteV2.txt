@@ -1,0 +1,192 @@
+
+
+POST _analyze
+{
+  "analyzer": "standard",
+  "text":"The Quick A Br@own  Foxe's jumped"
+}
+
+POST _analyze
+{
+  "tokenizer": "standard",
+  "text":"The Quick A Br@own  Foxe's jumped"
+}
+
+DELETE ott_movies
+GET ott_movies/_settings
+PUT ott_movies
+{
+  "settings": {
+        "analysis": {
+            "tokenizer": {
+                "_autocomplete" : {
+                    "type":"edge_ngram",
+                    "min_gram":2,
+                    "max_gram":10,
+                    "token_chars":[
+                        "letter",
+                        "digit"
+                    ]
+                }
+            },
+            "analyzer": {
+                "analyzerAutocomplete" :{
+                    "tokenizer":"_autocomplete",
+                    "filter" : ["lowercase"]                
+                },
+                "analyzerLowercase" :{
+                    "tokenizer":"lowercase",
+                    "filter":"my_stemmer" 
+                }
+            },
+            "filter": {
+              "my_stemmer": {
+                "type": "stemmer",
+                "language": "hindi"
+              }
+            }
+        }
+  },
+  "mappings": {
+        "properties": {
+            "title":{
+                "type": "text",
+                "analyzer": "analyzerAutocomplete",
+                "search_analyzer": "analyzerLowercase"
+            },
+            "title2":{
+                "type": "text",
+                "analyzer": "keyword"
+            },
+            "language":{
+                "type": "text",
+                "analyzer": "analyzerLowercase"
+            },
+            "genre":{
+                "type": "text",
+                "analyzer": "analyzerLowercase"
+                
+            },
+            "img_url":{
+                "type": "text",
+                "analyzer": "keyword", 
+                "store": false
+            },
+            "release_year":{
+              "type": "integer" 
+            }
+        }
+    }
+}
+POST ott_movies/_analyze
+{
+  "analyzer": "analyzerLowercase",
+  "text":"the foxes jumping quickly"
+}
+
+
+ POST /ott_movies/_doc
+{
+  "title":"Dil Bechara",
+  "title2":"Dil Bechara",
+  "language":"Hindi",
+  "genre":"Comedy",
+  "img_url":"ABC",
+  "release_year":2000
+    
+}
+                
+GET ott_movies/_search
+                    
+GET ott_movies/_search
+{
+  "query": {
+      "match": {
+        "_id": "5f8c649d919835824fa89ec9"
+      }
+  }
+}
+
+GET ott_movies/_search
+{
+  "query": {
+    "match": {
+      "genre": "come" 
+    }
+  }
+}
+
+GET ott_movies/_search
+{
+  "size": 20, 
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "aa"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET ott_movies/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "hindi",
+      "fields": ["title", "title2^2",  "language^3", "genre^2"]
+    }
+  }
+}
+
+
+
+GET ott_movies/_search
+{
+  "query": {
+    "bool": {
+      
+        "must": [
+            { "match": { "language":          "Assamese" }}
+            
+        ]
+    }
+  },
+  "sort": [
+    {
+      "release_year": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+
+
+GET ott_movies/_search
+{
+  "query": { 
+    
+    "dis_max": {
+      "tie_breaker": 0.7,
+      "boost": 1.2,
+      "queries": [
+          { "match": { "language": "Hindi" }},
+          { "match": { "genre": "Action" }}
+        ]
+    }
+  },
+  "sort": [
+    {
+      "release_year": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+
+

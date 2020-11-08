@@ -9,5 +9,6 @@ router.get('/reco/:key', search.getSearch);
 
 router.get('/foryou', search.getForyou);
 
+router.get('/foryouV1', search.getForyouV1);
 
 module.exports = router;
